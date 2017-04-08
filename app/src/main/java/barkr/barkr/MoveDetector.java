@@ -11,15 +11,15 @@ public class MoveDetector implements SensorEventListener {
     private static final int MOVE_COUNT_RESET_TIME_MS = 3000;
 
     private OnMoveListener mListener;
-    private long mShakeTimestamp;
-    private int mShakeCount;
+    private long mMoveTimestamp;
+    private int mMoveCount;
 
-    public void setOnShakeListener(OnMoveListener listener) {
+    public void setOnMoveListener(OnMoveListener listener) {
         this.mListener = listener;
     }
 
     public interface OnMoveListener {
-        public void onShake(int count);
+        public void onMove(int count);
     }
 
     @Override
@@ -44,20 +44,20 @@ public class MoveDetector implements SensorEventListener {
 
             if (gForce > MOVE_THRESHOLD_GRAVITY) {
                 final long now = System.currentTimeMillis();
-                // ignore shake events too close to each other (500ms)
-                if (mShakeTimestamp + MOVE_SLOP_TIME_MS > now) {
+                // ignore movement events too close to each other (500ms)
+                if (mMoveTimestamp + MOVE_SLOP_TIME_MS > now) {
                     return;
                 }
 
-                // reset the shake count after 3 seconds of no shakes
-                if (mShakeTimestamp + MOVE_COUNT_RESET_TIME_MS < now) {
-                    mShakeCount = 0;
+                // reset the movement count after 3 seconds of no movement
+                if (mMoveTimestamp + MOVE_COUNT_RESET_TIME_MS < now) {
+                    mMoveCount = 0;
                 }
 
-                mShakeTimestamp = now;
-                mShakeCount++;
+                mMoveTimestamp = now;
+                mMoveCount++;
 
-                mListener.onShake(mShakeCount);
+                mListener.onMove(mMoveCount);
             }
         }
     }

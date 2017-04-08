@@ -27,10 +27,10 @@ public class AlarmActivity extends AppCompatActivity {
         mAccelerometer = mSensorManager
                 .getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mShakeDetector = new MoveDetector();
-        mShakeDetector.setOnShakeListener(new MoveDetector.OnMoveListener() {
+        mShakeDetector.setOnMoveListener(new MoveDetector.OnMoveListener() {
 
             @Override
-            public void onShake(int count) {
+            public void onMove(int count) {
 				/*
 				 * The following method, "handleShakeEvent(count):" is a stub //
 				 * method you would use to setup whatever you want done once the

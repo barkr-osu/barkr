@@ -3,10 +3,13 @@ package barkr.barkr;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.Button;
 
 public class AlarmActivity extends AppCompatActivity {
 
     private final String TAG = this.getClass().getSimpleName();
+
+    private Button mGiantRedButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

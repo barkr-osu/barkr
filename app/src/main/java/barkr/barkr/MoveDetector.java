@@ -1,12 +1,14 @@
 package barkr.barkr;
 
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.widget.Toast;
 
 public class MoveDetector implements SensorEventListener {
-    private static final double MOVE_THRESHOLD_GRAVITY = 2.7;
+    private static final double MOVE_THRESHOLD_GRAVITY = 1.1;
     private static final int MOVE_SLOP_TIME_MS = 500;
     private static final int MOVE_COUNT_RESET_TIME_MS = 3000;
 

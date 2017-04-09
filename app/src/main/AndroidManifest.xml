@@ -17,6 +17,7 @@
         </activity>
         <activity android:name=".AlarmActivity" />
         <activity android:name=".SettingsActivity"></activity>
+        <service android:name=".BarkrAlarmPlaybackService" android:enabled="true"></service>
         <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
     </application>
 

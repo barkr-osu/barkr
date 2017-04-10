@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Barkr</string>
+    <!-- This is temporary. -->
+    <string name="no_pin">Please specify a PIN.</string>
+    <string name="no_email_or_phone">Please specify an email address, a phone number, or both.</string>
+    <string name="help">Please provide an email address or phone number, or both.\nIf the alarm is triggered,
+        an email or text message will be sent to the email address or phone number provided.\nAlso,
+        please provide a PIN, which you will need to enter to disarm the alarm.\nBe sure to press
+        "Save" when done.</string>
+    <string name="pin_too_short">Please specify a PIN that is at least 4 digits long.</string>
+    <string name="no_saved_email">NO EMAIL</string>
+    <string name="no_saved_phone_num">NO PHONE NUMBER</string>
+    <string name="no_saved_pin">NO PIN</string>
+    <string name="email_key">email</string>
+    <string name="phone_num_key">phone number</string>
+    <string name="pin_key">PIN</string>
 </resources>

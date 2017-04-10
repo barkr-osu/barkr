@@ -1,14 +1,9 @@
 package barkr.barkr;
 
-import android.app.AlarmManager;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
-import android.content.Context;
-import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
@@ -17,8 +12,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
-
-import java.io.IOException;
 
 public class AlarmActivity extends AppCompatActivity {
 
@@ -52,20 +45,24 @@ public class AlarmActivity extends AppCompatActivity {
         mGiantRedButton = (Button)findViewById(R.id.BIGREDBUTTON);
         mGiantRedButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
-            toBarkorNotToBark();
+            toBarkOrNotToBark();
             }
         });
         mGiantRedButton.setText("ARM");
-    }
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mAccelerometer = mSensorManager
-                .getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMoveDetector = new MoveDetector();
         mMoveDetector.setOnMoveListener(new MoveDetector.OnMoveListener() {
             @Override
             public void onMove(int count) {
-                Toast.makeText(AlarmActivity.this, "WOWWEE!", Toast.LENGTH_SHORT).show();
+                if (mGiantRedButton.getText() == "DISARM") {
+                    Toast.makeText(AlarmActivity.this, "WOWWEE!", Toast.LENGTH_SHORT).show();
+                    Intent alarmIntent	=	new	Intent(AlarmActivity.this, BarkrAlarmPlaybackService.class);
+                    alarmIntent.putExtra("URIString",	alarmURI.toString());
+                    startService(alarmIntent);
+
+                }
                 Log.d(TAG, "SHAKE SHAKE SHAKE: " + count);
                 //emailNotify();
             }
@@ -96,13 +93,7 @@ public class AlarmActivity extends AppCompatActivity {
         super.onDestroy();
         Log.d(TAG, "---ON DESTROY---");
     }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d(TAG, "ON PAUSE");
-    }
-
+    
     protected void onStart(){
         super.onStart();
         Log.d(TAG, "ON START");
@@ -114,12 +105,12 @@ public class AlarmActivity extends AppCompatActivity {
         Log.d(TAG, "ON STOP");
     }
 
-    protected void toBarkorNotToBark(){
+    protected void toBarkOrNotToBark(){
         if(mGiantRedButton.getText().equals("ARM")){
             mGiantRedButton.setText("DISARM");
-            Intent alarmIntent	=	new	Intent(AlarmActivity.this, BarkrAlarmPlaybackService.class);
-            alarmIntent.putExtra("URIString",	alarmURI.toString());
-            startService(alarmIntent);
+            //Intent alarmIntent	=	new	Intent(AlarmActivity.this, BarkrAlarmPlaybackService.class);
+            //alarmIntent.putExtra("URIString",	alarmURI.toString());
+            //startService(alarmIntent);
         }else{
             mGiantRedButton.setText("ARM");
             stopService(new	Intent(AlarmActivity.this,	BarkrAlarmPlaybackService.class));

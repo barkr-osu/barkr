@@ -29,6 +29,7 @@ public class AlarmActivity extends AppCompatActivity {
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private MoveDetector mMoveDetector;
+    private final int MY_PERMISSIONS_REQUEST_SEND_SMS = 12345;
 
     private static final String SHARED_PREF_FILE = "BarkrSettings";
     private SharedPreferences sharedPreferences;
@@ -47,13 +48,6 @@ public class AlarmActivity extends AppCompatActivity {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd 'at' h:mm a");
         String current_time_string = format.format(calendar.getTime());
 
-        try {
-            SmsManager smsManager = SmsManager.getDefault();
-            smsManager.sendTextMessage(savedPhoneNum, null, "BARKR - Potential break-in at " + current_time_string, null, null);
-        } catch (Exception e) {
-            Toast.makeText(AlarmActivity.this, "Unable to send SMS", Toast.LENGTH_SHORT).show();
-        }
-
         // TODO - Better way to do this
         Intent i = new Intent(Intent.ACTION_SEND);
         i.setType("message/rfc822");
@@ -67,6 +61,24 @@ public class AlarmActivity extends AppCompatActivity {
         }
     }
 
+    public void smsNotify(){
+        sharedPreferences=getSharedPreferences(SHARED_PREF_FILE,0);
+        String savedPhoneNum=sharedPreferences.getString(getString(R.string.phone_num_key),getString(R.string.no_saved_phone_num));
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd 'at' h:mm a");
+        String current_time_string = format.format(calendar.getTime());
+        try {
+            SmsManager smsManager = SmsManager.getDefault();
+            if(smsManager == null){
+                Log.d(TAG, "why is sms manager null");
+            }
+            smsManager.sendTextMessage(savedPhoneNum, "1234567890", "BARKR - Potential break-in at " + current_time_string, null, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(AlarmActivity.this, "Unable to send SMS", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +86,8 @@ public class AlarmActivity extends AppCompatActivity {
         mGiantRedButton = (Button)findViewById(R.id.BIGREDBUTTON);
         mGiantRedButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
-            toBarkOrNotToBark();
+                checkPermissions();
+                //toBarkOrNotToBark();
             }
         });
         mGiantRedButton.setText("ARM");
@@ -142,6 +155,56 @@ public class AlarmActivity extends AppCompatActivity {
         }else{
             mGiantRedButton.setText("ARM");
             stopService(new	Intent(AlarmActivity.this,	BarkrAlarmPlaybackService.class));
+        }
+    }
+
+    protected void checkPermissions(){
+        // Here, thisActivity is the current activity
+        try {
+            if (ContextCompat.checkSelfPermission(AlarmActivity.this,
+                    Manifest.permission.SEND_SMS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "WE DONT HAVE SEND SMS PERMISSIONS, REQUESTING NOW");
+                    // No explanation needed, we can request the permission.
+                    ActivityCompat.requestPermissions(AlarmActivity.this,
+                            new String[]{Manifest.permission.SEND_SMS},
+                            MY_PERMISSIONS_REQUEST_SEND_SMS);
+
+                    // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                    // app-defined int constant. The callback method gets the
+                    // result of the request.
+            }else{
+                Log.d(TAG, "WE HAVE SEND SMS PERMISSIONS");
+                smsNotify();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String permissions[], int[] grantResults) {
+        Log.d(TAG, "RECEIVING PERMISSIONS RESULT");
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST_SEND_SMS: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    smsNotify();
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request
         }
     }
 }

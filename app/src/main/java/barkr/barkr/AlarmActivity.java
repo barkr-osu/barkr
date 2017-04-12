@@ -10,6 +10,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import javax.mail.*;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,6 +32,7 @@ public class AlarmActivity extends AppCompatActivity {
     private Sensor mAccelerometer;
     private MoveDetector mMoveDetector;
     private final int MY_PERMISSIONS_REQUEST_SEND_SMS = 12345;
+    private final int MY_PERMISSIONS_REQUEST_USE_INTERNET = 54321;
 
     private static final String SHARED_PREF_FILE = "BarkrSettings";
     private SharedPreferences sharedPreferences;
@@ -45,7 +48,7 @@ public class AlarmActivity extends AppCompatActivity {
         String savedPin=sharedPreferences.getString(getString(R.string.pin_key),getString(R.string.no_saved_pin));
 
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd 'at' h:mm a");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 'at' h:mm a");
         String current_time_string = format.format(calendar.getTime());
 
         // TODO - Better way to do this
@@ -61,11 +64,27 @@ public class AlarmActivity extends AppCompatActivity {
         }
     }
 
+    public void sendEmail(){
+        Log.d(TAG, "in SEND EMAIL");
+        sharedPreferences=getSharedPreferences(SHARED_PREF_FILE,0);
+        String savedEmail=sharedPreferences.getString(getString(R.string.email_key),getString(R.string.no_saved_email));
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 'at' h:mm a");
+        String current_time_string = format.format(calendar.getTime());
+        try{
+            GMailSender sender = new GMailSender("barkr.osu@gmail.com", "Dg3wU3JBTmic6PX7Imo4PXPCo3IadLse5K675L2NBlyiG8p5U8zuc4XMDDQ0W2me");
+            sender.sendMail("BARKR - Break-in Detected!","A potential room break-in was detected at " + current_time_string, "barkr.osu@gmail.com", savedEmail);
+            Log.d(TAG, "MAIL SENT");
+        }catch(Exception e){
+            Log.e(TAG, "SEND MAIL Encountered an issue: " + e.getMessage(), e);
+        }
+    }
+
     public void smsNotify(){
         sharedPreferences=getSharedPreferences(SHARED_PREF_FILE,0);
         String savedPhoneNum=sharedPreferences.getString(getString(R.string.phone_num_key),getString(R.string.no_saved_phone_num));
         Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-mm-dd 'at' h:mm a");
+        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 'at' h:mm a");
         String current_time_string = format.format(calendar.getTime());
         try {
             SmsManager smsManager = SmsManager.getDefault();
@@ -86,8 +105,7 @@ public class AlarmActivity extends AppCompatActivity {
         mGiantRedButton = (Button)findViewById(R.id.BIGREDBUTTON);
         mGiantRedButton.setOnClickListener(new View.OnClickListener(){
             public void onClick(View v){
-                checkPermissions();
-                //toBarkOrNotToBark();
+                toBarkOrNotToBark();
             }
         });
         mGiantRedButton.setText("ARM");
@@ -103,8 +121,7 @@ public class AlarmActivity extends AppCompatActivity {
                     Intent alarmIntent	=	new	Intent(AlarmActivity.this, BarkrAlarmPlaybackService.class);
                     alarmIntent.putExtra("URIString",	alarmURI.toString());
                     startService(alarmIntent);
-                    emailNotify();
-
+                    checkPermissions();
                 }
             }
         });
@@ -180,6 +197,28 @@ public class AlarmActivity extends AppCompatActivity {
         }catch (Exception e){
             e.printStackTrace();
         }
+        try {
+            if (ContextCompat.checkSelfPermission(AlarmActivity.this,
+                    Manifest.permission.INTERNET)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "WE DONT HAVE INTERNET PERMISSIONS, REQUESTING NOW");
+                // No explanation needed, we can request the permission.
+                ActivityCompat.requestPermissions(AlarmActivity.this,
+                        new String[]{Manifest.permission.INTERNET},
+                        MY_PERMISSIONS_REQUEST_USE_INTERNET);
+
+                // MY_PERMISSIONS_REQUEST_READ_CONTACTS is an
+                // app-defined int constant. The callback method gets the
+                // result of the request.
+            }else{
+                Log.d(TAG, "WE HAVE INTERNET PERMISSIONS");
+                sharedPreferences=getSharedPreferences(SHARED_PREF_FILE,0);
+                String savedEmail=sharedPreferences.getString(getString(R.string.email_key),getString(R.string.no_saved_email));
+                new SendMailTask().execute(savedEmail);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -202,9 +241,43 @@ public class AlarmActivity extends AppCompatActivity {
                 }
                 return;
             }
+            case MY_PERMISSIONS_REQUEST_USE_INTERNET: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "SENDING EMAIL");
+                    sharedPreferences=getSharedPreferences(SHARED_PREF_FILE,0);
+                    String savedEmail=sharedPreferences.getString(getString(R.string.email_key),getString(R.string.no_saved_email));
+                    new SendMailTask().execute(savedEmail);
+                    // permission was granted, yay! Do the
+                    // contacts-related task you need to do.
+
+                } else {
+
+                    // permission denied, boo! Disable the
+                    // functionality that depends on this permission.
+                }
+                return;
+            }
 
             // other 'case' lines to check for other
             // permissions this app might request
         }
     }
+
+    private class SendMailTask extends AsyncTask<String, Integer, Long> {
+        protected Long doInBackground(String... strings) {
+            Calendar calendar = Calendar.getInstance();
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd 'at' h:mm a");
+            String current_time_string = format.format(calendar.getTime());
+            try {
+                GMailSender sender = new GMailSender("barkr.osu@gmail.com", "Dg3wU3JBTmic6PX7Imo4PXPCo3IadLse5K675L2NBlyiG8p5U8zuc4XMDDQ0W2me");
+                sender.sendMail("BARKR - Break-in Detected!", "A potential room break-in was detected at " + current_time_string, "barkr.osu@gmail.com", strings[0]);
+            } catch (Exception e) {
+                Log.e("SENDMAILTASK", "SEND MAIL Encountered an issue: " + e.getMessage(), e);
+            }
+            return null;
+        }
+    }
 }
+
